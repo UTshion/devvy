@@ -1,0 +1,22 @@
+[project]
+name = "devvy"
+version = "0.1.0"
+description = "Support your developing by "
+authors = [{ name = "UTshion", email = "yannbarushion@gmail.com" }]
+dependencies = ["click>=8.0.0", "colorama>=0.4.6", "rich>=13.0.0"]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/devvy"]
