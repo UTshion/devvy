@@ -15,7 +15,7 @@ class EnvironmentManager:
         self.console = Console(theme=Theme({"warning": "red", "success": "green"}))
         self.original_cwd = (
             Path.cwd()
-        )  # 現在の作業ディレクトリを保存(終了後にDESのディレクトリに戻るため)
+        )  # 現在の作業ディレクトリを保存(終了後にdevvyのディレクトリに戻るため)
 
     def start_interactive(self):
         """Start interactive command menu"""
@@ -80,6 +80,7 @@ class EnvironmentManager:
                 ("astro dev", "dev"),
                 ("astro check", "check"),
                 ("astro build", "build"),
+                ("exit", "exit"),
             ]
         elif self.project_type == ProjectType.NIX:
             return [
@@ -88,6 +89,7 @@ class EnvironmentManager:
                 ("nix build", "build"),
                 ("nix run", "run"),
                 ("nixos-rebuild", "rebuild"),
+                ("exit", "exit"),
             ]
         return []
 
@@ -127,10 +129,12 @@ class EnvironmentManager:
     def _handle_python_command(self, command_type: str):
         """Handle Python-specific commands"""
         if command_type == "add":
-            packages = packages = click.prompt(f"(rye: {command_type})", type=str)
+            self.console.print(f"[blink](rye: {command_type})[/blink] ", end="")
+            packages = click.prompt("", type=str)
             subprocess.run(["rye", "add"] + packages.split())
         elif command_type == "remove":
-            packages = packages = click.prompt(f"(rye: {command_type})", type=str)
+            self.console.print(f"[blink](rye: {command_type})[/blink] ", end="")
+            packages = click.prompt("", type=str)
             subprocess.run(["rye", "remove"] + packages.split())
         elif command_type == "sync":
             subprocess.run(["rye", "sync"])
@@ -140,7 +144,8 @@ class EnvironmentManager:
     def _handle_rust_command(self, command_type: str):
         """Handle Rust-specific commands"""
         if command_type == "add":
-            crates = click.prompt(f"(cargo: {command_type})", type=str)
+            self.console.print(f"[blink](cargo: {command_type})[/blink] ", end="")
+            crates = click.prompt("", type=str)
             for crate in crates.split():
                 subprocess.run(["cargo", "add", crate])
         elif command_type == "remove":
@@ -170,7 +175,8 @@ class EnvironmentManager:
     def _handle_astro_command(self, command_type: str):
         """Handle Astro-specific commands"""
         if command_type == "add":
-            integration = click.prompt(f"(astro: {command_type})", type=str)
+            self.console.print(f"[blink](astro: {command_type})[/blink] ", end="")
+            integration = click.prompt("", type=str)
             subprocess.run(["bunx", "astro", "add", integration])
         elif command_type == "dev":
             subprocess.run(["bunx", "--bun", "astro", "dev"])
@@ -182,25 +188,27 @@ class EnvironmentManager:
     def _handle_nix_command(self, command_type: str):
         """Handle Nix-specific commands"""
         if command_type == "shell":
-            packages = click.prompt(f"(nix: {command_type})", type=str, default="")
+            self.console.print(f"[blink](nix: {command_type})[/blink] ", end="")
+            packages = click.prompt("", type=str, default="")
             cmd = ["nix", "shell"]
             if packages:
                 cmd.extend(["-p"] + packages.split())
             subprocess.run(["alacritty", "-e"] + cmd)
         elif command_type == "develop":
             if not (self.project_path / "flake.nix").exists():
-                click.echo("There is no Flake environment in this directory.")
+                click.echo("There is no flake environment.")
                 return
-            flake_args = click.prompt(">", type=str, default="")
+            self.console.print(f"[blink](nix: {command_type})[/blink] ", end="")
+            flake_args = click.prompt("", type=str, default="")
             cmd = ["nix", "develop"]
             if flake_args:
                 cmd.append(flake_args)
             subprocess.run(cmd)
         elif command_type == "build":
-            flake_url = click.prompt(">", type=str)
+            self.console.print(f"[blink](nix: {command_type})[/blink] ", end="")
+            flake_url = click.prompt("", type=str)
             subprocess.run(["nix", "build", flake_url])
         elif command_type == "run":
-            flake_url = click.prompt(">", type=str)
+            self.console.print(f"[blink](nix: {command_type})[/blink] ", end="")
+            flake_url = click.prompt("", type=str)
             subprocess.run(["nix", "run", flake_url])
-        elif command_type == "rebuild":
-            subprocess.run(["sudo", "nixos-rebuild", "switch", "--flake", "."])
